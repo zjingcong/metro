@@ -69,12 +69,12 @@ class blackScene(Scene):
             self.add(self.sprite)
 
     class animLayer(Layer):
-        def __init__(self, *animation_frames):
+        def __init__(self, interval, *animation_frames):
             super(blackScene.animLayer, self).__init__()
             self.w, self.h = director.get_window_size()
-            hand_frame_list = [image.AnimationFrame(frame, 0.5) for frame in animation_frames]
-            hand_action_images = image.Animation(hand_frame_list)
-            self.sprite = Sprite(hand_action_images)
+            frame_list = [image.AnimationFrame(frame, interval) for frame in animation_frames]
+            action_images = image.Animation(frame_list)
+            self.sprite = Sprite(action_images)
             self.sprite.scale = float(self.h) / self.sprite.height
             self.sprite.position = self.w / 2, self.h / 2
             self.add(self.sprite)
@@ -92,16 +92,21 @@ class blackScene(Scene):
         self.background_image = "background.png"
         self.metro_image = "metro_black.png"
 
-        self.hand_1 = image.load("{current_dir}/{path}{name}".format(current_dir=CURRENT_DIR,
-                                                                     path=conf.get("path", "SCENE_BLACK_IMAGE"),
-                                                                     name="hand_1.png"))
-        self.hand_2 = image.load("{current_dir}/{path}{name}".format(current_dir=CURRENT_DIR,
-                                                                     path=conf.get("path", "SCENE_BLACK_IMAGE"),
-                                                                     name="hand_2.png"))
+        def get_anim_images(image_name):
+            anim_image = image.load("{current_dir}/{path}{name}".format(current_dir=CURRENT_DIR,
+                                                                        path=conf.get("path", "SCENE_BLACK_IMAGE"),
+                                                                        name=image_name))
+
+            return anim_image
+
+        path_list = ["hand_1.png", "hand_2.png", "fat_man_1.png", "fat_man_2.png", "short_man_1.png", "short_man_2.png"]
+        self.images = map(get_anim_images, path_list)
 
         self.layout()
 
     def layout(self):
         self.add(self.windowLayer(self.background_image))
         self.add(self.metroLayer(self.metro_image))
-        self.add(self.animLayer(self.hand_1, self.hand_2))
+        self.add(self.animLayer(0.5, self.images[0], self.images[1]))
+        self.add(self.animLayer(0.5, self.images[2], self.images[3]))
+        self.add(self.animLayer(0.5, self.images[4], self.images[5]))
