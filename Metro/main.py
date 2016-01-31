@@ -5,7 +5,6 @@ __title__ = ''
 __author__ = 'zjingcong'
 
 from black import *
-from audio import *
 from bright import *
 import waveform
 
@@ -62,9 +61,9 @@ class controlLayer(Layer):
         global control_p
 
         if k == key.ENTER:
-            director.replace(SplitRowsTransition(control_list[control_p + 1], 3))
-            metro_audio.fadeout(1200)
-            metro_audio.stop()
+            director.replace(SplitRowsTransition(control_list[control_p + 1], 1))
+            metro_audio.set_volume(0.2)
+            main_scene.remove(black_scene)
             bright_scene.main()
 
             return True
@@ -72,18 +71,20 @@ class controlLayer(Layer):
 if __name__ == '__main__':
     init()
 
-    wave = waveform.main(music_path)    # wave(wave data, music length)
     control = controlLayer(enter_path)
 
     metro_audio = metroAudio()
     music_audio = musicAudio()
 
+    main_scene = Scene()
     black_scene = blackViewScene()
     black_scene.add(control)
+    main_scene.add(black_scene)
+    wave = waveform.main(music_path)    # wave(wave data, music length)
     bright_scene = brightViewScene(wave, music_audio)
 
     control_p = 0
-    control_list = [black_scene, bright_scene]
+    control_list = [main_scene, bright_scene]
 
     metro_audio.play(loops=-1)
 

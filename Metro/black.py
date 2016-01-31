@@ -37,11 +37,11 @@ class blackViewScene(Scene):
 
         def action1(self, sprite):
             sprite.position = sprite.width / 2, sprite.height / 2
-            sprite.do(MoveBy((-sprite.width, 0), 8) + CallFuncS(self.action1))
+            sprite.do(MoveBy((-sprite.width, 0), 10) + CallFuncS(self.action1))
 
         def action2(self, sprite):
             sprite.position = sprite.width * 1.5, sprite.height / 2
-            sprite.do(MoveBy((-sprite.width, 0), 8) + CallFuncS(self.action2))
+            sprite.do(MoveBy((-sprite.width, 0), 10) + CallFuncS(self.action2))
 
     class metroLayer(Layer):
         def __init__(self, metro_image_path):

@@ -3,16 +3,14 @@
 
 __title__ = ''
 __author__ = 'zjingcong'
-__mtime__ = '2016/1/25'
 
 import wave
 import numpy as np
 
-import ConfigParser
 import logging
 import os
 
-SAMPLE_INTERVAL = 100
+SAMPLE_INTERVAL_TIME = 0.5
 CURRENT_DIR = os.path.split(os.path.abspath(__file__))[0]
 
 
@@ -21,6 +19,9 @@ def get_waveform(music_path):
     # (nchannels, sampwidth, framerate, nframes, comptype, compname)
     params = music_file.getparams()
     nchannels, sampwidth, framerate, nframes = params[:4]
+    logging.info("[MUSIC INFO] nchannels: {nchannels}, sampwidth: {sampwidth}, framerate: {framerate}, "
+                 "nframes: {nframes}.".format(nchannels=nchannels, sampwidth=sampwidth,
+                                              framerate=framerate, nframes=nframes))
 
     str_data = music_file.readframes(nframes)
     music_file.close()
@@ -40,12 +41,14 @@ def pcm(raw_data):
     wave_max = max(raw_data)
     wave_min = min(raw_data)
 
-    delta = int((wave_max - wave_min) / 3)
+    delta = int((wave_max - wave_min) / 4)
 
     def _pcm(data):
         if (data >= wave_min) and (data < wave_min + delta):
-            return 1
+            return 0
         elif (data >= wave_min + delta) and (data < wave_min + 2 * delta):
+            return 1
+        elif (data >= wave_min + 2 * delta) and (data < wave_min + 3 * delta):
             return 2
         else:
             return 3
@@ -63,7 +66,10 @@ def sample(sample_interval, raw_data):
 
 def main(music_path):
     wave_data, time = get_waveform(music_path)
-    sample_data = sample(SAMPLE_INTERVAL, wave_data)
+    sample_interval = int(time / SAMPLE_INTERVAL_TIME)
+    print "sample_interval: ", sample_interval
+    logging.info("[SAMPLE INTERVAL] {sample_interval}".format(sample_interval=sample_interval))
+    sample_data = sample(sample_interval, wave_data)
     pcm_data = pcm(sample_data)
 
     return pcm_data, time

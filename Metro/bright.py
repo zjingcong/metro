@@ -18,17 +18,21 @@ from audio import *
 
 
 CURRENT_DIR = os.path.split(os.path.abspath(__file__))[0]
+TREE_TIME = 8
 
 
 class brightViewScene(Scene):
     class windowLayer(Layer):
-        def __init__(self, background_image_path):
+        def __init__(self, images_path, interval):
             super(brightViewScene.windowLayer, self).__init__()
             self.w, self.h = director.get_window_size()
 
-            self.sprite1 = Sprite(background_image_path)
+            self.images_path = images_path
+            self.interval = interval
+
+            self.sprite1 = self._get_anim_sprite()
             self.sprite1.scale = float(self.h) / self.sprite1.height    # sprite(1920, 720)
-            self.sprite2 = Sprite(background_image_path)
+            self.sprite2 = self._get_anim_sprite()
             self.sprite2.scale = float(self.h) / self.sprite2.height
             self.sprite2.position = self.sprite2.width * 1.5, self.sprite2.height / 2
 
@@ -37,13 +41,38 @@ class brightViewScene(Scene):
             self.action1(self.sprite1)
             self.action2(self.sprite2)
 
+        def _get_anim_sprite(self):
+            view_image_list = []
+            direct_path = "{current_dir}/{path}".format(current_dir=CURRENT_DIR, path=self.images_path)
+            for root, dirs, files in os.walk(direct_path):
+                    for file in files:
+                        if file.startswith('background_bright_'):
+                            view_image_list.append(file)
+
+            view_image_list.sort()
+            conf = ConfigParser.ConfigParser()
+            conf.read("config.conf")
+
+            def _get_anim_images(image_name):
+                anim_image = image.load("{current_dir}/{path}{name}".format(current_dir=CURRENT_DIR,
+                                                                            path=conf.get("path", "SCENE_BRIGHT_IMAGE"),
+                                                                            name=image_name))
+                return anim_image
+            anim_image_list = map(_get_anim_images, view_image_list)
+
+            frame_list = [image.AnimationFrame(frame, self.interval) for frame in anim_image_list]
+            action_images = image.Animation(frame_list)
+            sprite = Sprite(action_images)
+
+            return sprite
+
         def action1(self, sprite):
             sprite.position = sprite.width / 2, sprite.height / 2
-            sprite.do(MoveBy((-sprite.width, 0), 8) + CallFuncS(self.action1))
+            sprite.do(MoveBy((-sprite.width, 0), 10) + CallFuncS(self.action1))
 
         def action2(self, sprite):
             sprite.position = sprite.width * 1.5, sprite.height / 2
-            sprite.do(MoveBy((-sprite.width, 0), 8) + CallFuncS(self.action2))
+            sprite.do(MoveBy((-sprite.width, 0), 10) + CallFuncS(self.action2))
 
     class metroLayer(Layer):
         def __init__(self, metro_image_path):
@@ -122,7 +151,7 @@ class brightViewScene(Scene):
             self.wave_data = wave_data
             self.interval = interval
             self.music_audio = music_audio
-            self.num = 20
+            self.num = 15
 
             super(brightViewScene.treeLayer, self).__init__()
             self.w, self.h = director.get_window_size()
@@ -140,7 +169,7 @@ class brightViewScene(Scene):
                 for index in l:
                     remain = index - (index / self.num) * self.num
                     tree = self.sprite_dict[level][remain]
-                    tree.do(Delay(index * self.interval) + MoveBy((-1920, 0), 3) + MoveBy((1920, 0), 0))
+                    tree.do(Delay(index * self.interval) + MoveBy((-1920, 0), TREE_TIME) + MoveBy((1920, 0), 0))
 
             level_1 = [i for i in xrange(len(self.wave_data)) if self.wave_data[i] == 1]
             level_2 = [i for i in xrange(len(self.wave_data)) if self.wave_data[i] == 2]
@@ -196,19 +225,20 @@ class brightViewScene(Scene):
 
         self.w, self.h = director.get_window_size()
         self.metro_image_path = "metro_bright.png"
-        self.background_image_path = "background_bright.png"
 
         def _get_anim_images(image_name):
             anim_image = image.load("{current_dir}/{path}{name}".format(current_dir=CURRENT_DIR,
-                                                                        path=conf.get("path", "SCENE_BLACK_IMAGE"),
+                                                                        path=conf.get("path", "SCENE_BRIGHT_IMAGE"),
                                                                         name=image_name))
             return anim_image
 
-        path_list = ["hand_1.png", "hand_2.png", "fat_man_1.png", "fat_man_2.png", "short_man_1.png", "short_man_2.png"]
+        path_list = ["hand_1_bright.png", "hand_2_bright.png", "fat_man_1_bright.png", "fat_man_2_bright.png",
+                     "short_man_1_bright.png", "short_man_2_bright.png"]
         self.images = map(_get_anim_images, path_list)
 
+        self.add(self.windowLayer(self.image_path, 10))
+
     def main(self):
-        self.add(self.windowLayer(self.background_image_path))
         self.add(self.treeLayer(self.image_path, self.wave_data, self.interval, self.music_audio))
         self.add(self.metroLayer(self.metro_image_path))
         self.add(self.animLayer(0.5, self.images[0], self.images[1]))
